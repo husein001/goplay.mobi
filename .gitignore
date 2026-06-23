@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native builds (generated locally / by EAS)
+/ios
+/android
+
+# Metro
+.metro-health-check*
+
+# Env / secrets
+.env
+.env.local
+*.keystore
+*.p8
+*.p12
+*.mobileprovision
+google-services.json
+GoogleService-Info.plist
+
+# Misc
+.DS_Store
+*.log
+npm-debug.*
+yarn-error.*
