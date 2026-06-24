@@ -30,7 +30,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0d0e16"
       },
-      "permissions": ["CAMERA", "INTERNET", "ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"],
+      "permissions": ["CAMERA", "INTERNET", "ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION", "POST_NOTIFICATIONS"],
       "intentFilters": [
         {
           "action": "VIEW",
@@ -43,6 +43,12 @@
     "plugins": [
       "expo-router",
       "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "color": "#6c5ce7"
+        }
+      ],
       [
         "expo-camera",
         { "cameraPermission": "Камера нужна для сканирования QR-кода клуба и входа на ПК." }

@@ -5,6 +5,7 @@ import { clubApi } from '@/api/clubs';
 import type { Booking, BookingStatus } from '@/api/types';
 import { Badge, Button, Card, Center, Muted, Subtitle } from '@/components/ui';
 import { RequireAuth } from '@/components/RequireAuth';
+import { useClubEvent, type RealtimeNotification } from '@/realtime/RealtimeProvider';
 import { colors, spacing } from '@/theme/colors';
 
 const STATUS_TONE: Record<BookingStatus, 'default' | 'success' | 'warning' | 'danger'> = {
@@ -51,6 +52,11 @@ function BookingsList() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Живое обновление: бронь поменяла статус (подтверждена/посадили/отменена).
+  useClubEvent('notification', (n: RealtimeNotification) => {
+    if (typeof n?.type === 'string' && n.type.startsWith('booking')) load();
+  });
 
   async function cancel(b: Booking) {
     Alert.alert('Отменить бронь?', `${b.club_name ?? 'Клуб'} · ${formatWhen(b.starts_at)}`, [

@@ -5,6 +5,7 @@ import { Stack } from 'expo-router';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider } from '@/auth/AuthContext';
+import { RealtimeProvider } from '@/realtime/RealtimeProvider';
 import { colors } from '@/theme/colors';
 
 export default function RootLayout() {
@@ -12,19 +13,21 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.bg }}>
       <SafeAreaProvider>
         <AuthProvider>
-          <StatusBar style="light" />
-          <Stack
-            screenOptions={{
-              headerStyle: { backgroundColor: colors.surface },
-              headerTintColor: colors.text,
-              headerTitleStyle: { fontWeight: '700' },
-              contentStyle: { backgroundColor: colors.bg },
-            }}
-          >
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="login" options={{ presentation: 'modal', title: 'Вход' }} />
-            <Stack.Screen name="club/[slug]" options={{ title: 'Клуб' }} />
-          </Stack>
+          <RealtimeProvider>
+            <StatusBar style="light" />
+            <Stack
+              screenOptions={{
+                headerStyle: { backgroundColor: colors.surface },
+                headerTintColor: colors.text,
+                headerTitleStyle: { fontWeight: '700' },
+                contentStyle: { backgroundColor: colors.bg },
+              }}
+            >
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="login" options={{ presentation: 'modal', title: 'Вход' }} />
+              <Stack.Screen name="club/[slug]" options={{ title: 'Клуб' }} />
+            </Stack>
+          </RealtimeProvider>
         </AuthProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>

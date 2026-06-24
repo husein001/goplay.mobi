@@ -4,6 +4,7 @@ import { clubApi } from '@/api/clubs';
 import type { Wallet, WalletTransaction } from '@/api/types';
 import { Button, Card, Center, Muted, Subtitle, Title } from '@/components/ui';
 import { RequireAuth } from '@/components/RequireAuth';
+import { useClubEvent, type RealtimeNotification } from '@/realtime/RealtimeProvider';
 import { colors, spacing } from '@/theme/colors';
 
 const PRESETS = [50, 100, 200, 500];
@@ -37,6 +38,12 @@ function WalletView() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Живое обновление баланса: пополнение/списание/бонус/реферал/промокод.
+  useClubEvent('notification', (n: RealtimeNotification) => {
+    const t = n?.type ?? '';
+    if (t.startsWith('wallet') || t.includes('topup') || t.includes('referral') || t.includes('promo')) load();
+  });
 
   async function topup(amount: number) {
     setBusy(amount);
