@@ -1,0 +1,55 @@
+{
+  "expo": {
+    "name": "Goplay",
+    "slug": "goplay-mobi",
+    "scheme": "goplay",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0d0e16",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0d0e16"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "tj.goplay.mobi",
+      "associatedDomains": ["applinks:goplay.tj"],
+      "infoPlist": {
+        "NSCameraUsageDescription": "Камера нужна для сканирования QR-кода клуба и входа на ПК.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "tj.goplay.mobi",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0d0e16"
+      },
+      "permissions": ["CAMERA", "INTERNET"],
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [{ "scheme": "https", "host": "goplay.tj", "pathPrefix": "/clubs" }],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-camera",
+        { "cameraPermission": "Камера нужна для сканирования QR-кода клуба и входа на ПК." }
+      ]
+    ],
+    "experiments": { "typedRoutes": true },
+    "extra": {
+      "apiBaseUrl": "https://goplay.tj"
+    }
+  }
+}
