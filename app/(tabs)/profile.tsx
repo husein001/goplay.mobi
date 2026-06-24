@@ -26,10 +26,10 @@ export default function ProfileScreen() {
         <Ionicons name="person-circle-outline" size={56} color={colors.textMuted} />
         <Title style={{ marginTop: spacing.md }}>Вы не вошли</Title>
         <Muted style={{ marginTop: spacing.sm, marginBottom: spacing.xl, textAlign: 'center' }}>
-          Войдите через Steam, чтобы пользоваться кошельком и бронями.
+          Войдите по номеру телефона, чтобы пользоваться кошельком и бронями.
         </Muted>
         <Link href="/login" asChild>
-          <Button title="Войти через Steam" />
+          <Button title="Войти по номеру" />
         </Link>
       </Center>
     );
@@ -61,7 +61,7 @@ export default function ProfileScreen() {
         )}
         <View style={{ flex: 1 }}>
           <Subtitle numberOfLines={1}>{user.username}</Subtitle>
-          <Muted>Аккаунт Steam</Muted>
+          <Muted>{user.phone || 'Аккаунт Goplay'}</Muted>
         </View>
       </Card>
 

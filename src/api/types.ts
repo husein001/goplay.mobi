@@ -6,7 +6,8 @@
 
 export interface User {
   id: string;
-  steam_id?: string;
+  steam_id?: string | null;
+  phone?: string | null;
   username: string;
   avatar?: string | null;
 }

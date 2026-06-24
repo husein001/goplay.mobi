@@ -24,10 +24,10 @@ export function RequireAuth({ children }: { children: React.ReactNode }) {
         <Ionicons name="lock-closed" size={48} color={colors.textMuted} />
         <Title style={{ marginTop: spacing.lg, textAlign: 'center' }}>Нужен вход</Title>
         <Muted style={{ marginTop: spacing.sm, marginBottom: spacing.xl, textAlign: 'center' }}>
-          Войдите через Steam, чтобы бронировать места, пополнять кошелёк и сканировать QR.
+          Войдите по номеру телефона, чтобы бронировать места, пополнять кошелёк и сканировать QR.
         </Muted>
         <Link href="/login" asChild>
-          <Button title="Войти через Steam" />
+          <Button title="Войти по номеру" />
         </Link>
       </Center>
     );

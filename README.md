@@ -16,7 +16,8 @@
 - **expo-router** — файловая навигация.
 - **expo-camera** — сканер QR.
 - **expo-secure-store** — JWT в keychain/keystore.
-- **react-native-webview** — Steam-вход (перехват `/auth/callback?token=`).
+- **Вход по номеру телефона** — SMS-код один раз, затем пароль (см.
+  `app/login.tsx` + `server-reference/` для бэкенда).
 - **EAS Build** — сборка `.ipa`/`.aab`, в том числе iOS без Mac.
 
 ## Структура
@@ -24,7 +25,7 @@
 ```
 app/                       # экраны (expo-router)
   _layout.tsx              # root: провайдеры, навигация
-  login.tsx                # Steam-вход через WebView
+  login.tsx                # вход по номеру: телефон → SMS-код → пароль
   club/[slug].tsx          # клуб + бронирование
   (tabs)/
     index.tsx              # каталог клубов
@@ -38,6 +39,7 @@ src/
   auth/                    # AuthContext, secure-store
   components/              # ui.tsx, RequireAuth
   theme/                   # палитра
+server-reference/          # готовый бэкенд входа по телефону (для goplay.tj)
 ```
 
 ## Запуск
@@ -78,5 +80,7 @@ eas submit --platform ios
 - [ ] Пуш-уведомления (expo-notifications + FCM/APNs); токен слать на бэкенд.
 - [ ] Карта клубов (react-native-maps) для вкладки «Клубы».
 - [ ] Реалтайм статусов броней через socket.io-client.
-- [ ] Когда `goplaynet` вынесут из goplay.tj — переключить `apiBaseUrl` и
-      добавить app-scheme редирект в Steam-входе.
+- [ ] **Бэкенд входа по телефону** — реализовать эндпоинты из `server-reference/`
+      в goplay.tj (миграция + SMS-провайдер). До этого экран входа не заработает.
+- [ ] Привязка телефона к существующим Steam-аккаунтам.
+- [ ] Когда `goplaynet` вынесут из goplay.tj — переключить `apiBaseUrl`.
