@@ -29,6 +29,7 @@ app/                       # экраны (expo-router)
   club/[slug].tsx          # клуб + бронирование
   (tabs)/
     index.tsx              # каталог клубов
+    map.tsx                # клубы на карте (геолокация + react-native-maps)
     bookings.tsx           # мои брони
     scan.tsx               # QR-сканер (вход на ПК)
     wallet.tsx             # кошелёк + пополнение
@@ -78,7 +79,8 @@ eas submit --platform ios
 ## TODO
 
 - [ ] Пуш-уведомления (expo-notifications + FCM/APNs); токен слать на бэкенд.
-- [ ] Карта клубов (react-native-maps) для вкладки «Клубы».
+- [x] Карта клубов (react-native-maps + expo-location) — вкладка «Карта».
+      На Android для прода нужен Google Maps API key (`android.config.googleMaps.apiKey`).
 - [ ] Реалтайм статусов броней через socket.io-client.
 - [ ] **Бэкенд входа по телефону** — реализовать эндпоинты из `server-reference/`
       в goplay.tj (миграция + SMS-провайдер). До этого экран входа не заработает.

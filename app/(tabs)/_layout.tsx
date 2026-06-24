@@ -26,6 +26,13 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="map"
+        options={{
+          title: 'Карта',
+          tabBarIcon: ({ color, size }) => <Ionicons name="map" color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
         name="bookings"
         options={{
           title: 'Брони',

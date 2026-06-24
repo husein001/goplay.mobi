@@ -20,6 +20,7 @@
       "associatedDomains": ["applinks:goplay.tj"],
       "infoPlist": {
         "NSCameraUsageDescription": "Камера нужна для сканирования QR-кода клуба и входа на ПК.",
+        "NSLocationWhenInUseUsageDescription": "Геолокация нужна, чтобы показать ближайшие клубы на карте.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -29,7 +30,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0d0e16"
       },
-      "permissions": ["CAMERA", "INTERNET"],
+      "permissions": ["CAMERA", "INTERNET", "ACCESS_FINE_LOCATION", "ACCESS_COARSE_LOCATION"],
       "intentFilters": [
         {
           "action": "VIEW",
@@ -45,6 +46,10 @@
       [
         "expo-camera",
         { "cameraPermission": "Камера нужна для сканирования QR-кода клуба и входа на ПК." }
+      ],
+      [
+        "expo-location",
+        { "locationWhenInUsePermission": "Геолокация нужна, чтобы показать ближайшие клубы на карте." }
       ]
     ],
     "experiments": { "typedRoutes": true },
