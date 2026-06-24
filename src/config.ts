@@ -11,5 +11,8 @@ export const API_BASE_URL: string =
 /** Корень REST-ядра (auth, профиль). */
 export const API_URL = `${API_BASE_URL}/api`;
 
-/** Клубный модуль (киберклубы, брони, кошелёк, QR). */
+/** Клубный модуль (киберклубы, брони, кошелёк, QR) — общий с десктоп .exe. */
 export const CLUB_API_URL = `${API_BASE_URL}/api/goplay-net`;
+
+/** Неймспейс мобильного приложения (вход по телефону и др. mobi-only эндпоинты). */
+export const MOBI_API_URL = `${API_BASE_URL}/api/mobi`;

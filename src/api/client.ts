@@ -1,4 +1,4 @@
-import { API_URL, CLUB_API_URL } from '@/config';
+import { API_URL, CLUB_API_URL, MOBI_API_URL } from '@/config';
 
 /**
  * Тонкий типизированный fetch-клиент. Токен держим в модульной переменной,
@@ -75,4 +75,11 @@ export const club = {
   get: <T>(path: string, o?: RequestOptions) => request<T>(CLUB_API_URL, path, { ...o, method: 'GET' }),
   post: <T>(path: string, body?: unknown, o?: RequestOptions) =>
     request<T>(CLUB_API_URL, path, { ...o, method: 'POST', body }),
+};
+
+/** Запрос к mobi-неймспейсу: /api/mobi/... (вход по телефону и т.д.) */
+export const mobi = {
+  get: <T>(path: string, o?: RequestOptions) => request<T>(MOBI_API_URL, path, { ...o, method: 'GET' }),
+  post: <T>(path: string, body?: unknown, o?: RequestOptions) =>
+    request<T>(MOBI_API_URL, path, { ...o, method: 'POST', body }),
 };

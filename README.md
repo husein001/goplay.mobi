@@ -51,8 +51,20 @@ npx expo install --fix     # выровнять версии нативных м
 npm start                  # затем 'i' (iOS) или 'a' (Android)
 ```
 
-API по умолчанию — `https://goplay.tj`. Поменять: `expo.extra.apiBaseUrl`
-в `app.json` или env при сборке.
+API по умолчанию — `https://goplay.tj`. Бэкенд разнесён по неймспейсам:
+`/api/*` — ядро (профиль), `/api/goplay-net` — клубы (общий с десктоп .exe),
+`/api/mobi` — вход по телефону и прочее mobi-only.
+
+### Переменные окружения (EAS secrets / env при сборке)
+
+| Переменная | Назначение |
+|---|---|
+| `GOOGLE_MAPS_API_KEY` | Ключ Google Maps для **Android** (вкладка «Карта»). iOS использует Apple Maps, ключ не нужен. Подставляется в `app.config.js`. |
+| `API_BASE_URL` | Переопределить бэкенд (по умолчанию `https://goplay.tj`). |
+
+```bash
+eas secret:create --scope project --name GOOGLE_MAPS_API_KEY --value <ключ>
+```
 
 ## Сборка в сторы (EAS)
 
@@ -82,7 +94,9 @@ eas submit --platform ios
 - [x] Карта клубов (react-native-maps + expo-location) — вкладка «Карта».
       На Android для прода нужен Google Maps API key (`android.config.googleMaps.apiKey`).
 - [ ] Реалтайм статусов броней через socket.io-client.
-- [ ] **Бэкенд входа по телефону** — реализовать эндпоинты из `server-reference/`
-      в goplay.tj (миграция + SMS-провайдер). До этого экран входа не заработает.
+- [x] **Бэкенд входа по телефону** — реализован в goplay.tj в неймспейсе
+      `backend/src/mobi` (`/api/mobi/auth/phone/*`), SMS-провайдер OSON.
+      Для прода задать env: `SMS_PROVIDER=oson`, `OSON_LOGIN`, `OSON_HASH`, `OSON_SENDER`.
+      Папка `server-reference/` оставлена как исходный референс (уже внедрено).
 - [ ] Привязка телефона к существующим Steam-аккаунтам.
 - [ ] Когда `goplaynet` вынесут из goplay.tj — переключить `apiBaseUrl`.

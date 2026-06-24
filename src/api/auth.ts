@@ -1,4 +1,4 @@
-import { core } from './client';
+import { mobi } from './client';
 import type { User } from './types';
 
 /**
@@ -9,32 +9,32 @@ import type { User } from './types';
  *  2a. зарегистрирован      → login(phone, password)
  *  2b. новый / сброс пароля → requestCode(phone) → verifyCode → setPassword
  *
- * Эндпоинты бэкенда (пока не реализованы в goplay.tj — см. server-reference/):
- *   POST /api/auth/phone/start         { phone }                  -> { registered }
- *   POST /api/auth/phone/request-code  { phone }                  -> { ok, resendIn }
- *   POST /api/auth/phone/verify-code   { phone, code }            -> { verifyToken }
- *   POST /api/auth/phone/set-password  { verifyToken, password }  -> { token, user }
- *   POST /api/auth/phone/login         { phone, password }        -> { token, user }
+ * Эндпоинты бэкенда — неймспейс mobi (backend/src/mobi, префикс /api/mobi):
+ *   POST /api/mobi/auth/phone/start         { phone }                  -> { registered }
+ *   POST /api/mobi/auth/phone/request-code  { phone }                  -> { ok, resendIn }
+ *   POST /api/mobi/auth/phone/verify-code   { phone, code }            -> { verifyToken }
+ *   POST /api/mobi/auth/phone/set-password  { verifyToken, password }  -> { token, user }
+ *   POST /api/mobi/auth/phone/login         { phone, password }        -> { token, user }
  */
 export const authApi = {
   start: (phone: string) =>
-    core.post<{ registered: boolean }>('/auth/phone/start', { phone }, { auth: false }),
+    mobi.post<{ registered: boolean }>('/auth/phone/start', { phone }, { auth: false }),
 
   requestCode: (phone: string) =>
-    core.post<{ ok: true; resendIn: number }>('/auth/phone/request-code', { phone }, { auth: false }),
+    mobi.post<{ ok: true; resendIn: number }>('/auth/phone/request-code', { phone }, { auth: false }),
 
   verifyCode: (phone: string, code: string) =>
-    core.post<{ verifyToken: string }>('/auth/phone/verify-code', { phone, code }, { auth: false }),
+    mobi.post<{ verifyToken: string }>('/auth/phone/verify-code', { phone, code }, { auth: false }),
 
   setPassword: (verifyToken: string, password: string) =>
-    core.post<{ token: string; user: User }>(
+    mobi.post<{ token: string; user: User }>(
       '/auth/phone/set-password',
       { verifyToken, password },
       { auth: false },
     ),
 
   login: (phone: string, password: string) =>
-    core.post<{ token: string; user: User }>('/auth/phone/login', { phone, password }, { auth: false }),
+    mobi.post<{ token: string; user: User }>('/auth/phone/login', { phone, password }, { auth: false }),
 };
 
 /** Нормализуем ввод к формату +992XXXXXXXXX (Таджикистан по умолчанию). */
