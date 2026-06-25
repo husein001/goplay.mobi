@@ -35,6 +35,9 @@ export const authApi = {
 
   login: (phone: string, password: string) =>
     mobi.post<{ token: string; user: User }>('/auth/phone/login', { phone, password }, { auth: false }),
+
+  /** Удалить собственный аккаунт (требование App Store / Google Play). */
+  deleteAccount: () => mobi.del<{ ok: true }>('/account'),
 };
 
 /** Нормализуем ввод к формату +992XXXXXXXXX (Таджикистан по умолчанию). */
