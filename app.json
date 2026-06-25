@@ -15,7 +15,7 @@
     },
     "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "tj.goplay.mobi",
       "associatedDomains": ["applinks:goplay.tj"],
       "infoPlist": {
