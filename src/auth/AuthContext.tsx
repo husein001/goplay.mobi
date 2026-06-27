@@ -2,6 +2,8 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import { setAuthToken } from '@/api/client';
 import { clubApi } from '@/api/clubs';
 import type { User } from '@/api/types';
+import { AUTH_STUB } from '@/config';
+import { stubGetUser } from './stubAuth';
 import { clearToken, loadToken, saveToken } from './storage';
 
 interface AuthState {
@@ -29,7 +31,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     try {
-      const { user } = await clubApi.me();
+      // В режиме локальной эмуляции профиль берём из stub-хранилища, а не с бэкенда.
+      const user = AUTH_STUB ? await stubGetUser(t) : (await clubApi.me()).user;
+      if (!user) throw new Error('no user');
       setUser(user);
     } catch {
       // Токен протух — выходим.

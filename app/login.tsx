@@ -9,11 +9,11 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { authApi, isValidPhone, normalizePhone } from '@/api/auth';
 import { ApiError } from '@/api/client';
 import { useAuth } from '@/auth/AuthContext';
+import { AUTH_STUB, STUB_OTP } from '@/config';
 import { Button, Muted, Title } from '@/components/ui';
 import { colors, radius, spacing } from '@/theme/colors';
 
@@ -69,7 +69,8 @@ export default function LoginScreen() {
   async function sendCode(p: string) {
     const { resendIn } = await authApi.requestCode(p);
     setResendIn(resendIn || 60);
-    setCode('');
+    // В режиме эмуляции код статичный — подставляем сразу, чтобы не вводить руками.
+    setCode(AUTH_STUB ? STUB_OTP : '');
     setStep('code');
   }
 
@@ -82,10 +83,23 @@ export default function LoginScreen() {
     setBusy(true);
     try {
       const { token } = await authApi.login(phone, password);
+      // Гейт авторизации сам перерисует на вкладки, навигация здесь не нужна.
       await signInWithToken(token);
-      router.back();
     } catch (e) {
       fail(e, 'Неверный номер или пароль');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  // Сброс пароля: подтверждаем номер кодом (ОТП) и задаём новый пароль.
+  async function forgotPassword() {
+    setError(null);
+    setBusy(true);
+    try {
+      await sendCode(phone);
+    } catch (e) {
+      fail(e, 'Не удалось отправить код');
     } finally {
       setBusy(false);
     }
@@ -122,8 +136,8 @@ export default function LoginScreen() {
     setBusy(true);
     try {
       const { token } = await authApi.setPassword(verifyToken, password);
+      // Гейт авторизации сам перерисует на вкладки, навигация здесь не нужна.
       await signInWithToken(token);
-      router.back();
     } catch (e) {
       fail(e, 'Не удалось сохранить пароль');
     } finally {
@@ -188,7 +202,7 @@ export default function LoginScreen() {
               icon="lock-closed"
             />
             <Button title="Войти" loading={busy} onPress={loginWithPassword} />
-            <Pressable onPress={resend} style={styles.linkBtn}>
+            <Pressable onPress={forgotPassword} style={styles.linkBtn}>
               <Text style={styles.link}>Забыли пароль?</Text>
             </Pressable>
           </>
@@ -197,7 +211,9 @@ export default function LoginScreen() {
         {step === 'code' && (
           <>
             <Title style={styles.h}>Введите код</Title>
-            <Muted style={styles.sub}>Отправили SMS на {phone}</Muted>
+            <Muted style={styles.sub}>
+              {AUTH_STUB ? `Тестовый код: ${STUB_OTP}` : `Отправили SMS на ${phone}`}
+            </Muted>
             <Field
               value={code}
               onChangeText={(v) => {
@@ -223,7 +239,9 @@ export default function LoginScreen() {
         {step === 'newPassword' && (
           <>
             <Title style={styles.h}>Придумайте пароль</Title>
-            <Muted style={styles.sub}>Им вы будете входить в следующий раз.</Muted>
+            <Muted style={styles.sub}>
+              Это пароль для входа во все клубы сети Goplay. Логин — ваш номер телефона.
+            </Muted>
             <Field
               value={password}
               onChangeText={setPassword}

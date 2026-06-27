@@ -1,10 +1,13 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import { Alert, FlatList, RefreshControl, StyleSheet, View } from 'react-native';
+import { router } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { clubApi } from '@/api/clubs';
 import type { Booking, BookingStatus } from '@/api/types';
+import { AUTH_STUB } from '@/config';
+import { cancelLocalBooking, getLocalBookings } from '@/features/booking';
 import { Badge, Button, Card, Center, Muted, Subtitle } from '@/components/ui';
-import { RequireAuth } from '@/components/RequireAuth';
 import { useClubEvent, type RealtimeNotification } from '@/realtime/RealtimeProvider';
 import { colors, spacing } from '@/theme/colors';
 
@@ -27,11 +30,7 @@ const STATUS_LABEL: Record<BookingStatus, string> = {
 };
 
 export default function BookingsScreen() {
-  return (
-    <RequireAuth>
-      <BookingsList />
-    </RequireAuth>
-  );
+  return <BookingsList />;
 }
 
 function BookingsList() {
@@ -39,19 +38,27 @@ function BookingsList() {
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
+    let list: Booking[] = [];
     try {
-      const data = await clubApi.myBookings();
-      setBookings(Array.isArray(data) ? data : []);
+      const remote = await clubApi.myBookings();
+      if (Array.isArray(remote)) list = remote;
     } catch {
-      // оставляем пусто
-    } finally {
-      setLoading(false);
+      // бэкенд недоступен
     }
+    if (AUTH_STUB) {
+      const local = await getLocalBookings();
+      list = [...local, ...list];
+    }
+    setBookings(list);
+    setLoading(false);
   }, []);
 
-  useEffect(() => {
-    load();
-  }, [load]);
+  // Перезагрузка при каждом возврате на вкладку (например, после создания брони).
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load]),
+  );
 
   // Живое обновление: бронь поменяла статус (подтверждена/посадили/отменена).
   useClubEvent('notification', (n: RealtimeNotification) => {
@@ -66,7 +73,8 @@ function BookingsList() {
         style: 'destructive',
         onPress: async () => {
           try {
-            await clubApi.cancelBooking(b.id);
+            if (AUTH_STUB) await cancelLocalBooking(b.id);
+            else await clubApi.cancelBooking(b.id);
             load();
           } catch (e: any) {
             Alert.alert('Ошибка', e?.message || 'Не удалось отменить');
@@ -90,6 +98,11 @@ function BookingsList() {
       keyExtractor={(b) => b.id}
       contentContainerStyle={styles.list}
       refreshControl={<RefreshControl refreshing={false} onRefresh={load} tintColor={colors.primary} />}
+      ListHeaderComponent={
+        <View style={{ marginBottom: spacing.md }}>
+          <Button title="+ Новая бронь" onPress={() => router.push('/new-booking')} />
+        </View>
+      }
       ListEmptyComponent={
         <Center>
           <Ionicons name="calendar-outline" size={40} color={colors.textMuted} />

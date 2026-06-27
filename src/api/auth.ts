@@ -1,5 +1,14 @@
 import { mobi } from './client';
 import type { User } from './types';
+import { AUTH_STUB } from '@/config';
+import {
+  stubStart,
+  stubRequestCode,
+  stubVerifyCode,
+  stubSetPassword,
+  stubLogin,
+  stubDeleteAccount,
+} from '@/auth/stubAuth';
 
 /**
  * Авторизация по номеру телефона.
@@ -16,28 +25,44 @@ import type { User } from './types';
  *   POST /api/mobi/auth/phone/set-password  { verifyToken, password }  -> { token, user }
  *   POST /api/mobi/auth/phone/login         { phone, password }        -> { token, user }
  */
+/**
+ * При `AUTH_STUB` весь телефонный вход обслуживается локально (см. stubAuth.ts):
+ * бэкенд `/api/mobi/auth/phone/*` не вызывается, ОТП статичный. Поставьте
+ * `AUTH_STUB = false` в config.ts, когда появятся реальные SMS-креды.
+ */
 export const authApi = {
   start: (phone: string) =>
-    mobi.post<{ registered: boolean }>('/auth/phone/start', { phone }, { auth: false }),
+    AUTH_STUB
+      ? stubStart(phone)
+      : mobi.post<{ registered: boolean }>('/auth/phone/start', { phone }, { auth: false }),
 
   requestCode: (phone: string) =>
-    mobi.post<{ ok: true; resendIn: number }>('/auth/phone/request-code', { phone }, { auth: false }),
+    AUTH_STUB
+      ? stubRequestCode(phone)
+      : mobi.post<{ ok: true; resendIn: number }>('/auth/phone/request-code', { phone }, { auth: false }),
 
   verifyCode: (phone: string, code: string) =>
-    mobi.post<{ verifyToken: string }>('/auth/phone/verify-code', { phone, code }, { auth: false }),
+    AUTH_STUB
+      ? stubVerifyCode(phone, code)
+      : mobi.post<{ verifyToken: string }>('/auth/phone/verify-code', { phone, code }, { auth: false }),
 
   setPassword: (verifyToken: string, password: string) =>
-    mobi.post<{ token: string; user: User }>(
-      '/auth/phone/set-password',
-      { verifyToken, password },
-      { auth: false },
-    ),
+    AUTH_STUB
+      ? stubSetPassword(verifyToken, password)
+      : mobi.post<{ token: string; user: User }>(
+          '/auth/phone/set-password',
+          { verifyToken, password },
+          { auth: false },
+        ),
 
   login: (phone: string, password: string) =>
-    mobi.post<{ token: string; user: User }>('/auth/phone/login', { phone, password }, { auth: false }),
+    AUTH_STUB
+      ? stubLogin(phone, password)
+      : mobi.post<{ token: string; user: User }>('/auth/phone/login', { phone, password }, { auth: false }),
 
   /** Удалить собственный аккаунт (требование App Store / Google Play). */
-  deleteAccount: () => mobi.del<{ ok: true }>('/account'),
+  deleteAccount: () =>
+    AUTH_STUB ? stubDeleteAccount() : mobi.del<{ ok: true }>('/account'),
 };
 
 /** Нормализуем ввод к формату +992XXXXXXXXX (Таджикистан по умолчанию). */

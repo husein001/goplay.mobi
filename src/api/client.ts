@@ -11,6 +11,10 @@ export function setAuthToken(token: string | null): void {
   authToken = token;
 }
 
+export function getAuthToken(): string | null {
+  return authToken;
+}
+
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
     super(message);

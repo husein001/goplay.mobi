@@ -4,15 +4,10 @@ import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useIsFocused } from '@react-navigation/native';
 import { clubApi } from '@/api/clubs';
 import { Button, Center, Muted, Title } from '@/components/ui';
-import { RequireAuth } from '@/components/RequireAuth';
 import { colors, radius, spacing } from '@/theme/colors';
 
 export default function ScanScreen() {
-  return (
-    <RequireAuth>
-      <Scanner />
-    </RequireAuth>
-  );
+  return <Scanner />;
 }
 
 function Scanner() {
