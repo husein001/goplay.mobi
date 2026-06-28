@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -170,7 +171,7 @@ export default function LoginScreen() {
     >
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.logo}>
-          <Ionicons name="game-controller" size={40} color={colors.primary} />
+          <Image source={require('../assets/logo-go.png')} style={{ width: 168, height: 70 }} resizeMode="contain" />
         </View>
 
         {step === 'phone' && (
