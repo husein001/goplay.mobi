@@ -72,8 +72,9 @@ export const clubApi = {
 
   // Реферал/промокоды отключены на запуск (баланс по клубам делает их неоднозначными).
 
-  // --- уведомления ---
-  notifications: () => club.get<ClubNotification[]>('/notifications'),
+  // --- уведомления (бэкенд оборачивает в { notifications, unread }) ---
+  notifications: () =>
+    club.get<{ notifications: ClubNotification[]; unread: number }>('/notifications').then((r) => r.notifications ?? []),
   markRead: (id: string) => club.post<{ ok: true }>(`/notifications/${id}/read`),
   markAllRead: () => club.post<{ ok: true }>('/notifications/read-all'),
 };
