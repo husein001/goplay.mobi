@@ -73,17 +73,40 @@ export interface Booking {
   created_at: string;
 }
 
-export interface Wallet {
+/** Кошелёк игрока В КОНКРЕТНОМ КЛУБЕ (баланс отдельный на каждый клуб). */
+export interface ClubWallet {
+  user_id: string;
+  club_id: string;
+  club_name: string;
+  club_slug: string | null;
   balance: number;
-  currency: string;
+  bonus_minutes: number;
+  /** Несведённые пополнения «в долг» — к оплате при выходе. */
+  owed: number;
 }
 
 export interface WalletTransaction {
   id: string;
+  club_id: string;
   type: string;
   amount: number;
-  description?: string | null;
+  balance_after: number;
+  /** Для пополнений: получены ли деньги (false = «в долг», оплата при выходе). */
+  settled: boolean;
+  settled_at?: string | null;
+  ref_type?: string | null;
+  meta?: Record<string, unknown> | null;
   created_at: string;
+}
+
+export interface TopupRequest {
+  id: string;
+  club_id: string;
+  amount: number;
+  note: string | null;
+  status: 'pending' | 'approved' | 'declined';
+  created_at: string;
+  resolved_at?: string | null;
 }
 
 export interface Package {

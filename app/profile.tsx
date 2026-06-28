@@ -3,7 +3,6 @@ import { Alert, Image, Linking, Pressable, ScrollView, StyleSheet, TextInput, Vi
 import { Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/auth/AuthContext';
-import { clubApi } from '@/api/clubs';
 import { authApi } from '@/api/auth';
 import { Button, Card, Center, Muted, Subtitle, Title } from '@/components/ui';
 import { colors, radius, spacing } from '@/theme/colors';
@@ -13,8 +12,6 @@ const TERMS_URL = 'https://goplay.tj/terms';
 
 export default function ProfileScreen() {
   const { user, loading, signOut, refresh } = useAuth();
-  const [promo, setPromo] = useState('');
-  const [redeeming, setRedeeming] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [name, setName] = useState('');
   const [savingName, setSavingName] = useState(false);
@@ -73,20 +70,6 @@ export default function ProfileScreen() {
         </Link>
       </Center>
     );
-  }
-
-  async function redeemPromo() {
-    if (!promo.trim()) return;
-    setRedeeming(true);
-    try {
-      const res = await clubApi.redeemPromo(promo.trim());
-      Alert.alert('Промокод', res?.message || 'Применён');
-      setPromo('');
-    } catch (e: any) {
-      Alert.alert('Промокод', e?.message || 'Не удалось применить');
-    } finally {
-      setRedeeming(false);
-    }
   }
 
   async function saveName() {
@@ -155,21 +138,6 @@ export default function ProfileScreen() {
         <Button title="Изменить пароль" loading={savingPwd} onPress={savePassword} />
       </Card>
 
-      <Card style={{ gap: spacing.md }}>
-        <Subtitle>Промокод</Subtitle>
-        <View style={styles.promoRow}>
-          <TextInput
-            value={promo}
-            onChangeText={setPromo}
-            placeholder="Введите код"
-            placeholderTextColor={colors.textMuted}
-            autoCapitalize="characters"
-            style={styles.input}
-          />
-        </View>
-        <Button title="Применить" loading={redeeming} onPress={redeemPromo} />
-      </Card>
-
       <Card style={{ gap: 0 }}>
         <Pressable style={styles.linkRow} onPress={() => Linking.openURL(PRIVACY_URL)}>
           <Ionicons name="shield-checkmark-outline" size={18} color={colors.textMuted} />
@@ -195,7 +163,6 @@ const styles = StyleSheet.create({
   head: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   avatar: { width: 56, height: 56, borderRadius: 28, backgroundColor: colors.surfaceAlt },
   avatarFallback: { alignItems: 'center', justifyContent: 'center' },
-  promoRow: { flexDirection: 'row', gap: spacing.sm },
   linkRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, paddingVertical: spacing.md },
   linkText: { flex: 1, color: colors.text },
   sep: { height: StyleSheet.hairlineWidth, backgroundColor: colors.border },
