@@ -3,6 +3,8 @@ import type {
   Booking,
   Club,
   ClubDetail,
+  ChatMessage,
+  ChatThread,
   ClubNotification,
   ClubWallet,
   TopupRequest,
@@ -62,6 +64,11 @@ export const clubApi = {
 
   // --- QR: вход на ПК ---
   unlockSeat: (token: string) => club.post<{ ok: true; seat?: string }>('/unlock', { token }),
+
+  // --- чат с админом (доступен при открытой сессии) ---
+  myChat: () => club.get<{ active: boolean; thread: ChatThread | null; messages: ChatMessage[] }>('/chat/my'),
+  sendChatMessage: (text: string) =>
+    club.post<{ message: ChatMessage }>('/chat/my/message', { text }),
 
   // Реферал/промокоды отключены на запуск (баланс по клубам делает их неоднозначными).
 

@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Tabs, router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { fetchNotifications } from '@/features/notifications';
+import { clubApi } from '@/api/clubs';
 import { useClubEvent } from '@/realtime/RealtimeProvider';
 import { colors, spacing } from '@/theme/colors';
 
@@ -30,6 +31,36 @@ function NotificationsBell() {
       accessibilityLabel="Уведомления"
     >
       <Ionicons name="notifications-outline" size={24} color={colors.text} />
+      {unread > 0 && (
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>{unread > 9 ? '9+' : unread}</Text>
+        </View>
+      )}
+    </Pressable>
+  );
+}
+
+/** Кнопка чата с админом (бейдж непрочитанных ответов). Доступен при сессии. */
+function ChatButton() {
+  const [unread, setUnread] = useState(0);
+  const refresh = useCallback(async () => {
+    const r = await clubApi.myChat().catch(() => null);
+    setUnread(r?.active ? r.thread?.member_unread ?? 0 : 0);
+  }, []);
+  useEffect(() => { refresh(); }, [refresh]);
+  useClubEvent('notification', (n: any) => {
+    if (typeof n?.type === 'string' && n.type.includes('chat')) refresh();
+  });
+
+  return (
+    <Pressable
+      onPress={() => router.push('/chat')}
+      hitSlop={8}
+      style={styles.bell}
+      accessibilityRole="button"
+      accessibilityLabel="Чат с админом"
+    >
+      <Ionicons name="chatbubble-ellipses-outline" size={23} color={colors.text} />
       {unread > 0 && (
         <View style={styles.badge}>
           <Text style={styles.badgeText}>{unread > 9 ? '9+' : unread}</Text>
@@ -81,6 +112,7 @@ export default function TabsLayout() {
         headerTitleStyle: { fontWeight: '700' },
         headerRight: () => (
           <View style={styles.headerRight}>
+            <ChatButton />
             <NotificationsBell />
             <ProfileButton />
           </View>

@@ -40,6 +40,7 @@ function RootNavigator() {
         <Stack.Screen name="profile" options={{ title: 'Профиль' }} />
         <Stack.Screen name="notifications" options={{ title: 'Уведомления' }} />
         <Stack.Screen name="new-booking" options={{ title: 'Новая бронь' }} />
+        <Stack.Screen name="chat" options={{ title: 'Чат с админом' }} />
       </Stack.Protected>
       <Stack.Protected guard={!user}>
         <Stack.Screen name="login" options={{ headerShown: false }} />

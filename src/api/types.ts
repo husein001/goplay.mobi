@@ -120,6 +120,25 @@ export interface HappyHour {
   ends_at?: string;
 }
 
+export interface ChatMessage {
+  id: string;
+  thread_id: string;
+  sender: 'member' | 'admin';
+  text: string;
+  created_at: string;
+}
+
+export interface ChatThread {
+  id: string;
+  club_id: string;
+  pc_id: string | null;
+  pc_label: string | null;
+  member_name: string | null;
+  status: string;
+  member_unread: number;
+  last_message_at: string;
+}
+
 export interface ClubNotification {
   id: string;
   title: string;
