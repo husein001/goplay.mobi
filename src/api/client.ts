@@ -86,5 +86,7 @@ export const mobi = {
   get: <T>(path: string, o?: RequestOptions) => request<T>(MOBI_API_URL, path, { ...o, method: 'GET' }),
   post: <T>(path: string, body?: unknown, o?: RequestOptions) =>
     request<T>(MOBI_API_URL, path, { ...o, method: 'POST', body }),
+  patch: <T>(path: string, body?: unknown, o?: RequestOptions) =>
+    request<T>(MOBI_API_URL, path, { ...o, method: 'PATCH', body }),
   del: <T>(path: string, o?: RequestOptions) => request<T>(MOBI_API_URL, path, { ...o, method: 'DELETE' }),
 };

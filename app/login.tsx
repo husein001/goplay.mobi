@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 import {
   Image,
   KeyboardAvoidingView,
@@ -14,36 +14,27 @@ import { Ionicons } from '@expo/vector-icons';
 import { authApi, isValidPhone, normalizePhone } from '@/api/auth';
 import { ApiError } from '@/api/client';
 import { useAuth } from '@/auth/AuthContext';
-import { AUTH_STUB, STUB_OTP } from '@/config';
 import { Button, Muted, Title } from '@/components/ui';
 import { colors, radius, spacing } from '@/theme/colors';
 
-type Step = 'phone' | 'password' | 'code' | 'newPassword';
+type Step = 'phone' | 'password' | 'register';
 
 export default function LoginScreen() {
   const { signInWithToken } = useAuth();
 
   const [step, setStep] = useState<Step>('phone');
   const [phone, setPhone] = useState('+992');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
-  const [code, setCode] = useState('');
-  const [verifyToken, setVerifyToken] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [resendIn, setResendIn] = useState(0);
-
-  // Таймер повторной отправки кода.
-  useEffect(() => {
-    if (resendIn <= 0) return;
-    const t = setInterval(() => setResendIn((s) => Math.max(0, s - 1)), 1000);
-    return () => clearInterval(t);
-  }, [resendIn]);
 
   function fail(e: unknown, fallback: string) {
     setError(e instanceof ApiError ? e.message : fallback);
   }
 
+  // Шаг 1 — номер. Узнаём, зарегистрирован ли он: да → пароль, нет → регистрация.
   async function submitPhone() {
     const p = normalizePhone(phone);
     if (!isValidPhone(p)) {
@@ -55,11 +46,7 @@ export default function LoginScreen() {
     try {
       const { registered } = await authApi.start(p);
       setPhone(p);
-      if (registered) {
-        setStep('password');
-      } else {
-        await sendCode(p);
-      }
+      setStep(registered ? 'password' : 'register');
     } catch (e) {
       fail(e, 'Не удалось проверить номер');
     } finally {
@@ -67,14 +54,7 @@ export default function LoginScreen() {
     }
   }
 
-  async function sendCode(p: string) {
-    const { resendIn } = await authApi.requestCode(p);
-    setResendIn(resendIn || 60);
-    // В режиме эмуляции код статичный — подставляем сразу, чтобы не вводить руками.
-    setCode(AUTH_STUB ? STUB_OTP : '');
-    setStep('code');
-  }
-
+  // Вход существующего: номер + пароль.
   async function loginWithPassword() {
     if (!password) {
       setError('Введите пароль');
@@ -84,7 +64,6 @@ export default function LoginScreen() {
     setBusy(true);
     try {
       const { token } = await authApi.login(phone, password);
-      // Гейт авторизации сам перерисует на вкладки, навигация здесь не нужна.
       await signInWithToken(token);
     } catch (e) {
       fail(e, 'Неверный номер или пароль');
@@ -93,38 +72,12 @@ export default function LoginScreen() {
     }
   }
 
-  // Сброс пароля: подтверждаем номер кодом (ОТП) и задаём новый пароль.
-  async function forgotPassword() {
-    setError(null);
-    setBusy(true);
-    try {
-      await sendCode(phone);
-    } catch (e) {
-      fail(e, 'Не удалось отправить код');
-    } finally {
-      setBusy(false);
+  // Регистрация: имя + пароль (без SMS). Логин — номер.
+  async function submitRegister() {
+    if (username.trim().length < 2) {
+      setError('Введите имя (от 2 символов)');
+      return;
     }
-  }
-
-  async function submitCode(value?: string) {
-    const c = (value ?? code).trim();
-    if (c.length < 4) return;
-    setError(null);
-    setBusy(true);
-    try {
-      const { verifyToken } = await authApi.verifyCode(phone, c);
-      setVerifyToken(verifyToken);
-      setPassword('');
-      setConfirm('');
-      setStep('newPassword');
-    } catch (e) {
-      fail(e, 'Неверный или просроченный код');
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function submitNewPassword() {
     if (password.length < 6) {
       setError('Пароль не короче 6 символов');
       return;
@@ -136,23 +89,10 @@ export default function LoginScreen() {
     setError(null);
     setBusy(true);
     try {
-      const { token } = await authApi.setPassword(verifyToken, password);
-      // Гейт авторизации сам перерисует на вкладки, навигация здесь не нужна.
+      const { token } = await authApi.register(phone, username.trim(), password);
       await signInWithToken(token);
     } catch (e) {
-      fail(e, 'Не удалось сохранить пароль');
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function resend() {
-    if (resendIn > 0) return;
-    setBusy(true);
-    try {
-      await sendCode(phone);
-    } catch (e) {
-      fail(e, 'Не удалось отправить код');
+      fail(e, 'Не удалось зарегистрироваться');
     } finally {
       setBusy(false);
     }
@@ -160,15 +100,13 @@ export default function LoginScreen() {
 
   function back() {
     setError(null);
-    if (step === 'password' || step === 'code') setStep('phone');
-    else if (step === 'newPassword') setStep('code');
+    setPassword('');
+    setConfirm('');
+    setStep('phone');
   }
 
   return (
-    <KeyboardAvoidingView
-      style={styles.fill}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+    <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.logo}>
           <Image source={require('../assets/logo-go.png')} style={{ width: 168, height: 70 }} resizeMode="contain" />
@@ -177,15 +115,8 @@ export default function LoginScreen() {
         {step === 'phone' && (
           <>
             <Title style={styles.h}>Вход по номеру</Title>
-            <Muted style={styles.sub}>Введите номер телефона — пришлём SMS с кодом подтверждения.</Muted>
-            <Field
-              value={phone}
-              onChangeText={setPhone}
-              placeholder="+992 90 123 45 67"
-              keyboardType="phone-pad"
-              autoFocus
-              icon="call"
-            />
+            <Muted style={styles.sub}>Введите номер телефона — он же будет вашим логином.</Muted>
+            <Field value={phone} onChangeText={setPhone} placeholder="+992 90 123 45 67" keyboardType="phone-pad" autoFocus icon="call" />
             <Button title="Продолжить" loading={busy} onPress={submitPhone} />
           </>
         )}
@@ -194,71 +125,19 @@ export default function LoginScreen() {
           <>
             <Title style={styles.h}>С возвращением</Title>
             <Muted style={styles.sub}>{phone}</Muted>
-            <Field
-              value={password}
-              onChangeText={setPassword}
-              placeholder="Пароль"
-              secureTextEntry
-              autoFocus
-              icon="lock-closed"
-            />
+            <Field value={password} onChangeText={setPassword} placeholder="Пароль" secureTextEntry autoFocus icon="lock-closed" />
             <Button title="Войти" loading={busy} onPress={loginWithPassword} />
-            <Pressable onPress={forgotPassword} style={styles.linkBtn}>
-              <Text style={styles.link}>Забыли пароль?</Text>
-            </Pressable>
           </>
         )}
 
-        {step === 'code' && (
+        {step === 'register' && (
           <>
-            <Title style={styles.h}>Введите код</Title>
-            <Muted style={styles.sub}>
-              {AUTH_STUB ? `Тестовый код: ${STUB_OTP}` : `Отправили SMS на ${phone}`}
-            </Muted>
-            <Field
-              value={code}
-              onChangeText={(v) => {
-                const digits = v.replace(/\D/g, '').slice(0, 6);
-                setCode(digits);
-                if (digits.length === 6) submitCode(digits);
-              }}
-              placeholder="• • • • • •"
-              keyboardType="number-pad"
-              autoFocus
-              icon="keypad"
-              center
-            />
-            <Button title="Подтвердить" loading={busy} onPress={() => submitCode()} />
-            <Pressable onPress={resend} disabled={resendIn > 0} style={styles.linkBtn}>
-              <Text style={[styles.link, resendIn > 0 && styles.linkDisabled]}>
-                {resendIn > 0 ? `Отправить код повторно (${resendIn})` : 'Отправить код повторно'}
-              </Text>
-            </Pressable>
-          </>
-        )}
-
-        {step === 'newPassword' && (
-          <>
-            <Title style={styles.h}>Придумайте пароль</Title>
-            <Muted style={styles.sub}>
-              Это пароль для входа во все клубы сети Goplay. Логин — ваш номер телефона.
-            </Muted>
-            <Field
-              value={password}
-              onChangeText={setPassword}
-              placeholder="Новый пароль"
-              secureTextEntry
-              autoFocus
-              icon="lock-closed"
-            />
-            <Field
-              value={confirm}
-              onChangeText={setConfirm}
-              placeholder="Повторите пароль"
-              secureTextEntry
-              icon="lock-closed"
-            />
-            <Button title="Сохранить и войти" loading={busy} onPress={submitNewPassword} />
+            <Title style={styles.h}>Регистрация</Title>
+            <Muted style={styles.sub}>{phone} · придумайте имя и пароль. Логин — ваш номер.</Muted>
+            <Field value={username} onChangeText={setUsername} placeholder="Ваше имя" icon="person" autoFocus />
+            <Field value={password} onChangeText={setPassword} placeholder="Пароль (от 6 символов)" secureTextEntry icon="lock-closed" />
+            <Field value={confirm} onChangeText={setConfirm} placeholder="Повторите пароль" secureTextEntry icon="lock-closed" />
+            <Button title="Зарегистрироваться" loading={busy} onPress={submitRegister} />
           </>
         )}
 
@@ -282,7 +161,6 @@ function Field(props: {
   keyboardType?: 'phone-pad' | 'number-pad' | 'default';
   autoFocus?: boolean;
   icon?: keyof typeof Ionicons.glyphMap;
-  center?: boolean;
 }) {
   return (
     <View style={styles.field}>
@@ -296,7 +174,7 @@ function Field(props: {
         keyboardType={props.keyboardType}
         autoFocus={props.autoFocus}
         autoCapitalize="none"
-        style={[styles.input, props.center && { textAlign: 'center', letterSpacing: 6 }]}
+        style={styles.input}
       />
     </View>
   );
@@ -322,6 +200,5 @@ const styles = StyleSheet.create({
   input: { flex: 1, color: colors.text, fontSize: 16, height: '100%' },
   linkBtn: { alignSelf: 'center', paddingVertical: spacing.sm },
   link: { color: colors.primary, fontSize: 14, fontWeight: '600' },
-  linkDisabled: { color: colors.textMuted },
   error: { color: colors.danger, textAlign: 'center', marginTop: spacing.xs },
 });

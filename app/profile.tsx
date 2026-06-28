@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Alert, Image, Linking, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { Link } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -12,10 +12,19 @@ const PRIVACY_URL = 'https://goplay.tj/privacy';
 const TERMS_URL = 'https://goplay.tj/terms';
 
 export default function ProfileScreen() {
-  const { user, loading, signOut } = useAuth();
+  const { user, loading, signOut, refresh } = useAuth();
   const [promo, setPromo] = useState('');
   const [redeeming, setRedeeming] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [name, setName] = useState('');
+  const [savingName, setSavingName] = useState(false);
+  const [curPwd, setCurPwd] = useState('');
+  const [newPwd, setNewPwd] = useState('');
+  const [confPwd, setConfPwd] = useState('');
+  const [savingPwd, setSavingPwd] = useState(false);
+
+  // Префилл имени текущим значением, когда профиль подгрузился.
+  useEffect(() => { if (user?.username) setName(user.username); }, [user?.username]);
 
   function confirmDelete() {
     Alert.alert(
@@ -80,6 +89,36 @@ export default function ProfileScreen() {
     }
   }
 
+  async function saveName() {
+    const v = name.trim();
+    if (v.length < 2) { Alert.alert('Имя', 'Имя от 2 символов'); return; }
+    setSavingName(true);
+    try {
+      await authApi.updateProfile(v);
+      await refresh();
+      Alert.alert('Профиль', 'Имя обновлено');
+    } catch (e: any) {
+      Alert.alert('Профиль', e?.message || 'Не удалось сохранить');
+    } finally {
+      setSavingName(false);
+    }
+  }
+
+  async function savePassword() {
+    if (newPwd.length < 6) { Alert.alert('Пароль', 'Новый пароль от 6 символов'); return; }
+    if (newPwd !== confPwd) { Alert.alert('Пароль', 'Пароли не совпадают'); return; }
+    setSavingPwd(true);
+    try {
+      await authApi.changePassword(curPwd, newPwd);
+      setCurPwd(''); setNewPwd(''); setConfPwd('');
+      Alert.alert('Пароль', 'Пароль изменён');
+    } catch (e: any) {
+      Alert.alert('Пароль', e?.message || 'Не удалось изменить пароль');
+    } finally {
+      setSavingPwd(false);
+    }
+  }
+
   return (
     <ScrollView contentContainerStyle={styles.content}>
       <Card style={styles.head}>
@@ -94,6 +133,26 @@ export default function ProfileScreen() {
           <Subtitle numberOfLines={1}>{user.username}</Subtitle>
           <Muted>{user.phone || 'Аккаунт Goplay'}</Muted>
         </View>
+      </Card>
+
+      <Card style={{ gap: spacing.md }}>
+        <Subtitle>Имя</Subtitle>
+        <TextInput
+          value={name}
+          onChangeText={setName}
+          placeholder="Ваше имя"
+          placeholderTextColor={colors.textMuted}
+          style={styles.input}
+        />
+        <Button title="Сохранить имя" loading={savingName} onPress={saveName} />
+      </Card>
+
+      <Card style={{ gap: spacing.md }}>
+        <Subtitle>Сменить пароль</Subtitle>
+        <TextInput value={curPwd} onChangeText={setCurPwd} placeholder="Текущий пароль" placeholderTextColor={colors.textMuted} secureTextEntry autoCapitalize="none" style={styles.input} />
+        <TextInput value={newPwd} onChangeText={setNewPwd} placeholder="Новый пароль (от 6)" placeholderTextColor={colors.textMuted} secureTextEntry autoCapitalize="none" style={styles.input} />
+        <TextInput value={confPwd} onChangeText={setConfPwd} placeholder="Повторите новый пароль" placeholderTextColor={colors.textMuted} secureTextEntry autoCapitalize="none" style={styles.input} />
+        <Button title="Изменить пароль" loading={savingPwd} onPress={savePassword} />
       </Card>
 
       <Card style={{ gap: spacing.md }}>

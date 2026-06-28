@@ -18,13 +18,11 @@ export const CLUB_API_URL = `${API_BASE_URL}/api/goplay-net`;
 export const MOBI_API_URL = `${API_BASE_URL}/api/mobi`;
 
 /**
- * Временная локальная эмуляция входа, пока нет SMS-кредов на бэкенде.
- * При `true` весь телефонный вход (start/код/пароль) обслуживается локально
- * (`src/auth/stubAuth.ts`), ОТП — статичный `STUB_OTP`, аккаунты хранятся на
- * устройстве. Когда появятся реальные креды — поставить `false`, и вернутся
- * вызовы реального бэкенда `/api/mobi/auth/phone/*`.
+ * Локальная эмуляция входа отключена — приложение работает с реальным бэкендом
+ * `/api/mobi/auth/phone/*`. Регистрация без SMS: номер + имя + пароль; вход —
+ * номер + пароль. SMS-OTP не используется (нет кредов), поэтому мок не нужен.
  */
-export const AUTH_STUB = true;
+export const AUTH_STUB = false;
 
 /** Статичный код подтверждения для режима `AUTH_STUB`. */
 export const STUB_OTP = '123456';

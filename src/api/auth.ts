@@ -1,68 +1,42 @@
 import { mobi } from './client';
 import type { User } from './types';
-import { AUTH_STUB } from '@/config';
-import {
-  stubStart,
-  stubRequestCode,
-  stubVerifyCode,
-  stubSetPassword,
-  stubLogin,
-  stubDeleteAccount,
-} from '@/auth/stubAuth';
 
 /**
- * Авторизация по номеру телефона.
+ * Авторизация по номеру телефона (реальный бэкенд, без SMS-кредов).
  *
  * Поток:
- *  1. start(phone)          → зарегистрирован ли номер
- *  2a. зарегистрирован      → login(phone, password)
- *  2b. новый / сброс пароля → requestCode(phone) → verifyCode → setPassword
+ *  1. start(phone)     → зарегистрирован ли номер
+ *  2a. зарегистрирован → login(phone, password)
+ *  2b. новый           → register(phone, username, password)
  *
- * Эндпоинты бэкенда — неймспейс mobi (backend/src/mobi, префикс /api/mobi):
- *   POST /api/mobi/auth/phone/start         { phone }                  -> { registered }
- *   POST /api/mobi/auth/phone/request-code  { phone }                  -> { ok, resendIn }
- *   POST /api/mobi/auth/phone/verify-code   { phone, code }            -> { verifyToken }
- *   POST /api/mobi/auth/phone/set-password  { verifyToken, password }  -> { token, user }
- *   POST /api/mobi/auth/phone/login         { phone, password }        -> { token, user }
- */
-/**
- * При `AUTH_STUB` весь телефонный вход обслуживается локально (см. stubAuth.ts):
- * бэкенд `/api/mobi/auth/phone/*` не вызывается, ОТП статичный. Поставьте
- * `AUTH_STUB = false` в config.ts, когда появятся реальные SMS-креды.
+ * Эндпоинты (неймспейс /api/mobi):
+ *   POST /auth/phone/start     { phone }                        -> { registered }
+ *   POST /auth/phone/register  { phone, username, password }    -> { token, user }
+ *   POST /auth/phone/login     { phone, password }              -> { token, user }
+ *   GET  /auth/phone/me                                         -> { user }
+ *   PATCH /auth/phone/profile  { username }                     -> { user }
+ *   POST /auth/phone/password  { currentPassword, newPassword } -> { ok }
  */
 export const authApi = {
   start: (phone: string) =>
-    AUTH_STUB
-      ? stubStart(phone)
-      : mobi.post<{ registered: boolean }>('/auth/phone/start', { phone }, { auth: false }),
+    mobi.post<{ registered: boolean }>('/auth/phone/start', { phone }, { auth: false }),
 
-  requestCode: (phone: string) =>
-    AUTH_STUB
-      ? stubRequestCode(phone)
-      : mobi.post<{ ok: true; resendIn: number }>('/auth/phone/request-code', { phone }, { auth: false }),
-
-  verifyCode: (phone: string, code: string) =>
-    AUTH_STUB
-      ? stubVerifyCode(phone, code)
-      : mobi.post<{ verifyToken: string }>('/auth/phone/verify-code', { phone, code }, { auth: false }),
-
-  setPassword: (verifyToken: string, password: string) =>
-    AUTH_STUB
-      ? stubSetPassword(verifyToken, password)
-      : mobi.post<{ token: string; user: User }>(
-          '/auth/phone/set-password',
-          { verifyToken, password },
-          { auth: false },
-        ),
+  register: (phone: string, username: string, password: string) =>
+    mobi.post<{ token: string; user: User }>('/auth/phone/register', { phone, username, password }, { auth: false }),
 
   login: (phone: string, password: string) =>
-    AUTH_STUB
-      ? stubLogin(phone, password)
-      : mobi.post<{ token: string; user: User }>('/auth/phone/login', { phone, password }, { auth: false }),
+    mobi.post<{ token: string; user: User }>('/auth/phone/login', { phone, password }, { auth: false }),
+
+  me: () => mobi.get<{ user: User }>('/auth/phone/me'),
+
+  updateProfile: (username: string) =>
+    mobi.patch<{ user: User }>('/auth/phone/profile', { username }),
+
+  changePassword: (currentPassword: string, newPassword: string) =>
+    mobi.post<{ ok: true }>('/auth/phone/password', { currentPassword, newPassword }),
 
   /** Удалить собственный аккаунт (требование App Store / Google Play). */
-  deleteAccount: () =>
-    AUTH_STUB ? stubDeleteAccount() : mobi.del<{ ok: true }>('/account'),
+  deleteAccount: () => mobi.del<{ ok: true }>('/account'),
 };
 
 /** Нормализуем ввод к формату +992XXXXXXXXX (Таджикистан по умолчанию). */
@@ -77,7 +51,7 @@ export function normalizePhone(raw: string): string {
   return d;
 }
 
-/** Базовая проверка: +992 и 9 цифр (всего 13 символов). */
+/** Базовая проверка: + и 11–15 цифр. */
 export function isValidPhone(phone: string): boolean {
   return /^\+\d{11,15}$/.test(phone);
 }
