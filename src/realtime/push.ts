@@ -20,6 +20,8 @@ function ensureHandler(): void {
     Notifications.setNotificationHandler({
       handleNotification: async () => ({
         // SDK 53+: shouldShowAlert разделён на shouldShowBanner + shouldShowList.
+        // shouldShowAlert оставляем для обратной совместимости типа NotificationBehavior.
+        shouldShowAlert: true,
         shouldShowBanner: true,
         shouldShowList: true,
         shouldPlaySound: true,
