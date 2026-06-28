@@ -50,13 +50,8 @@ export interface Game {
   icon_url?: string | null;
 }
 
-export type BookingStatus =
-  | 'pending'
-  | 'confirmed'
-  | 'seated'
-  | 'cancelled'
-  | 'completed'
-  | 'no_show';
+// Зеркало бэкенда (booking.model): pending | confirmed | cancelled | done | no_show.
+export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'done' | 'no_show';
 
 export interface Booking {
   id: string;
@@ -65,11 +60,11 @@ export interface Booking {
   zone_id?: string | null;
   zone_name?: string | null;
   pc_id?: string | null;
-  seat_label?: string | null;
+  pc_label?: string | null;
   starts_at: string;
-  duration_minutes: number;
+  duration_hours: number;
   status: BookingStatus;
-  total_amount?: number;
+  estimated_total?: number;
   created_at: string;
 }
 

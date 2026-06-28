@@ -5,8 +5,6 @@ import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { clubApi } from '@/api/clubs';
 import type { Booking, BookingStatus } from '@/api/types';
-import { AUTH_STUB } from '@/config';
-import { cancelLocalBooking, getLocalBookings } from '@/features/booking';
 import { Badge, Button, Card, Center, Muted, Subtitle } from '@/components/ui';
 import { useClubEvent, type RealtimeNotification } from '@/realtime/RealtimeProvider';
 import { colors, spacing } from '@/theme/colors';
@@ -14,8 +12,7 @@ import { colors, spacing } from '@/theme/colors';
 const STATUS_TONE: Record<BookingStatus, 'default' | 'success' | 'warning' | 'danger'> = {
   pending: 'warning',
   confirmed: 'success',
-  seated: 'success',
-  completed: 'default',
+  done: 'default',
   cancelled: 'danger',
   no_show: 'danger',
 };
@@ -23,8 +20,7 @@ const STATUS_TONE: Record<BookingStatus, 'default' | 'success' | 'warning' | 'da
 const STATUS_LABEL: Record<BookingStatus, string> = {
   pending: 'Ожидает',
   confirmed: 'Подтверждена',
-  seated: 'За ПК',
-  completed: 'Завершена',
+  done: 'Завершена',
   cancelled: 'Отменена',
   no_show: 'Не пришёл',
 };
@@ -38,17 +34,7 @@ function BookingsList() {
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
-    let list: Booking[] = [];
-    try {
-      const remote = await clubApi.myBookings();
-      if (Array.isArray(remote)) list = remote;
-    } catch {
-      // бэкенд недоступен
-    }
-    if (AUTH_STUB) {
-      const local = await getLocalBookings();
-      list = [...local, ...list];
-    }
+    const list = await clubApi.myBookings().catch(() => [] as Booking[]);
     setBookings(list);
     setLoading(false);
   }, []);
@@ -73,8 +59,7 @@ function BookingsList() {
         style: 'destructive',
         onPress: async () => {
           try {
-            if (AUTH_STUB) await cancelLocalBooking(b.id);
-            else await clubApi.cancelBooking(b.id);
+            await clubApi.cancelBooking(b.id);
             load();
           } catch (e: any) {
             Alert.alert('Ошибка', e?.message || 'Не удалось отменить');
@@ -120,11 +105,11 @@ function BookingsList() {
               <Badge label={STATUS_LABEL[item.status]} tone={STATUS_TONE[item.status]} />
             </View>
             <Muted>
-              {formatWhen(item.starts_at)} · {item.duration_minutes} мин
+              {formatWhen(item.starts_at)} · {formatDuration(item.duration_hours)}
               {item.zone_name ? ` · ${item.zone_name}` : ''}
-              {item.seat_label ? ` · место ${item.seat_label}` : ''}
+              {item.pc_label ? ` · место ${item.pc_label}` : ''}
             </Muted>
-            {item.total_amount != null && <Muted>Сумма: {item.total_amount} c</Muted>}
+            {item.estimated_total != null && <Muted>Ориентир: {item.estimated_total} смн</Muted>}
             {canCancel && (
               <View style={{ marginTop: spacing.sm }}>
                 <Button title="Отменить бронь" variant="outline" onPress={() => cancel(item)} />
@@ -135,6 +120,12 @@ function BookingsList() {
       }}
     />
   );
+}
+
+function formatDuration(hours: number): string {
+  if (hours >= 1 && Number.isInteger(hours)) return `${hours} ч`;
+  const mins = Math.round(hours * 60);
+  return mins % 60 === 0 ? `${mins / 60} ч` : `${mins} мин`;
 }
 
 function formatWhen(iso: string): string {

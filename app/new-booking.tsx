@@ -2,9 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { clubApi } from '@/api/clubs';
-import type { Booking } from '@/api/types';
-import { AUTH_STUB } from '@/config';
-import { addLocalBooking, loadBookableClubs, type BookableClub } from '@/features/booking';
+import { loadBookableClubs, type BookableClub } from '@/features/booking';
 import { Button, Center, Muted, Subtitle } from '@/components/ui';
 import { colors, radius, spacing } from '@/theme/colors';
 
@@ -59,29 +57,13 @@ export default function NewBookingScreen() {
 
     setBusy(true);
     try {
-      if (AUTH_STUB) {
-        const booking: Booking = {
-          id: 'local-' + Date.now(),
-          club_id: club.id,
-          club_name: club.name,
-          zone_id: zone.id,
-          zone_name: zone.name,
-          starts_at: startsAt,
-          duration_minutes: duration,
-          status: 'confirmed',
-          total_amount: price ?? undefined,
-          created_at: new Date().toISOString(),
-        };
-        await addLocalBooking(booking);
-      } else {
-        await clubApi.createBooking({
-          clubId: club.id,
-          zoneId: zone.id,
-          startsAt,
-          durationMinutes: duration,
-        });
-      }
-      Alert.alert('Готово', 'Бронь создана', [
+      await clubApi.createBooking({
+        clubId: club.id,
+        zoneId: zone.id,
+        startsAt,
+        durationHours: duration / 60, // UI хранит минуты, бэкенд ждёт часы
+      });
+      Alert.alert('Готово', 'Заявка на бронь отправлена — клуб подтвердит её.', [
         { text: 'OK', onPress: () => router.back() },
       ]);
     } catch (e: any) {
