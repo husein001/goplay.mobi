@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { setAuthToken } from '@/api/client';
-import { clubApi } from '@/api/clubs';
+import { authApi } from '@/api/auth';
 import type { User } from '@/api/types';
 import { clearToken, loadToken, saveToken } from './storage';
 
@@ -29,7 +29,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     try {
-      const user = (await clubApi.me()).user;
+      // Профиль игрока, вошедшего по телефону: mobi-эндпоинт /auth/phone/me
+      // возвращает { user }. (Ядровой /api/auth/me отдаёт плоский объект без
+      // обёртки и для телефонных юзеров не годится — из-за этого вход «молча» падал.)
+      const { user } = await authApi.me();
       if (!user) throw new Error('no user');
       setUser(user);
     } catch {
