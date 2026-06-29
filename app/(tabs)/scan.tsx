@@ -41,13 +41,18 @@ function Scanner() {
     );
   }
 
-  async function onScan(token: string) {
+  async function onScan(raw: string) {
     if (locked.current || busy) return;
     locked.current = true;
     setBusy(true);
     try {
-      const res = await clubApi.unlockSeat(extractToken(token));
-      Alert.alert('Готово', res?.seat ? `ПК разблокирован: ${res.seat}` : 'ПК разблокирован', [
+      const seat = extractSeat(raw);
+      if (!seat) {
+        throw new Error('Это не QR-код Goplay. Наведите на код на экране ПК.');
+      }
+      const res = await clubApi.unlockSeat(seat);
+      const name = res?.session?.pc_name;
+      Alert.alert('Готово', name ? `ПК разблокирован: ${name}` : 'ПК разблокирован', [
         { text: 'OK', onPress: () => (locked.current = false) },
       ]);
     } catch (e: any) {
@@ -77,11 +82,19 @@ function Scanner() {
   );
 }
 
-/** QR может быть «голым» токеном или ссылкой вида …/clubs/seat?token=XXX. */
-function extractToken(raw: string): string {
-  const m = raw.match(/[?&]token=([^&#]+)/);
-  if (m) return decodeURIComponent(m[1]);
-  return raw.trim();
+/**
+ * QR у ПК кодирует ссылку вида …/clubs/seat?p=<pcId>&n=<nonce>.
+ * Достаём оба параметра — бэкенд /unlock ждёт { pcId, nonce }.
+ * Возвращаем null, если это не наш QR (нет обоих параметров).
+ */
+function extractSeat(raw: string): { pcId: string; nonce: string } | null {
+  const get = (key: string) => {
+    const m = raw.match(new RegExp(`[?&]${key}=([^&#]+)`));
+    return m ? decodeURIComponent(m[1]) : null;
+  };
+  const pcId = get('p') || get('pcId');
+  const nonce = get('n') || get('nonce');
+  return pcId && nonce ? { pcId, nonce } : null;
 }
 
 const styles = StyleSheet.create({

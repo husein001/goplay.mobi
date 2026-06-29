@@ -63,7 +63,13 @@ export const clubApi = {
   myTopupRequests: () => club.get<{ requests: TopupRequest[] }>('/wallet/topup-requests'),
 
   // --- QR: вход на ПК ---
-  unlockSeat: (token: string) => club.post<{ ok: true; seat?: string }>('/unlock', { token }),
+  // QR у ПК кодирует ссылку …/clubs/seat?p=<pcId>&n=<nonce>. Бэкенд /unlock
+  // ждёт именно { pcId, nonce } — стартует сессию с кошелька клуба.
+  unlockSeat: (seat: { pcId: string; nonce: string }) =>
+    club.post<{ session: { id: string; pc_name?: string; club_id: string }; wallet: unknown }>(
+      '/unlock',
+      seat,
+    ),
 
   // --- чат с админом (доступен при открытой сессии) ---
   myChat: () => club.get<{ active: boolean; thread: ChatThread | null; messages: ChatMessage[] }>('/chat/my'),
