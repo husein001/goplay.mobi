@@ -109,7 +109,7 @@ export default function LoginScreen() {
     <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.logo}>
-          <Image source={require('../assets/logo-go.png')} style={{ width: 168, height: 70 }} resizeMode="contain" />
+          <Image source={require('../assets/logo-goplay.png')} style={{ width: 244, height: 48 }} resizeMode="contain" />
         </View>
 
         {step === 'phone' && (
