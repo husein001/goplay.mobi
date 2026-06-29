@@ -66,10 +66,10 @@ export const clubApi = {
   // QR у ПК кодирует ссылку …/clubs/seat?p=<pcId>&n=<nonce>. Бэкенд /unlock
   // ждёт именно { pcId, nonce } — стартует сессию с кошелька клуба.
   unlockSeat: (seat: { pcId: string; nonce: string }) =>
-    club.post<{ session: { id: string; pc_name?: string; club_id: string }; wallet: unknown }>(
-      '/unlock',
-      seat,
-    ),
+    club.post<{
+      session: { id: string; pc_name?: string; club_id: string; awaiting_funds?: boolean };
+      wallet: { balance?: number } | null;
+    }>('/unlock', seat),
 
   // --- чат с админом (доступен при открытой сессии) ---
   myChat: () => club.get<{ active: boolean; thread: ChatThread | null; messages: ChatMessage[] }>('/chat/my'),

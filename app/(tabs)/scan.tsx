@@ -52,9 +52,19 @@ function Scanner() {
       }
       const res = await clubApi.unlockSeat(seat);
       const name = res?.session?.pc_name;
-      Alert.alert('Готово', name ? `ПК разблокирован: ${name}` : 'ПК разблокирован', [
-        { text: 'OK', onPress: () => (locked.current = false) },
-      ]);
+      if (res?.session?.awaiting_funds) {
+        // Сел за ПК, но баланс пуст: место занято, экран ПК показывает пакеты/тариф.
+        // Разблокируется автоматически, как только баланс пополнят.
+        Alert.alert(
+          'Пополните баланс',
+          'Вы заняли место, но баланс пуст. Пополните счёт — ПК разблокируется автоматически. Можно запросить пополнение в «Кошельке» или у кассира.',
+          [{ text: 'Понятно', onPress: () => (locked.current = false) }],
+        );
+      } else {
+        Alert.alert('Готово', name ? `ПК разблокирован: ${name}` : 'ПК разблокирован', [
+          { text: 'OK', onPress: () => (locked.current = false) },
+        ]);
+      }
     } catch (e: any) {
       Alert.alert('Не вышло', e?.message || 'Неверный или просроченный QR', [
         { text: 'Ещё раз', onPress: () => (locked.current = false) },
