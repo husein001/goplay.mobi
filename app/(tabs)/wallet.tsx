@@ -155,6 +155,11 @@ export default function WalletScreen() {
 function TxnRow({ txn, clubName }: { txn: WalletTransaction; clubName: string }) {
   const positive = txn.amount > 0;
   const deferred = txn.type === 'topup' && !txn.settled;
+  // Списания сессии схлопнуты бэкендом в одну строку — показываем длительность.
+  const meta = (txn as any).meta;
+  const durMin = meta?.aggregated && meta?.from && meta?.to
+    ? Math.max(1, Math.round((new Date(meta.to).getTime() - new Date(meta.from).getTime()) / 60000))
+    : null;
   return (
     <Card style={styles.txn}>
       <View style={[styles.txnIcon, { backgroundColor: positive ? `${colors.success}22` : `${colors.danger}22` }]}>
@@ -162,7 +167,9 @@ function TxnRow({ txn, clubName }: { txn: WalletTransaction; clubName: string })
       </View>
       <View style={{ flex: 1 }}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
-          <Muted style={{ color: colors.text }} numberOfLines={1}>{txnLabel(txn.type)}</Muted>
+          <Muted style={{ color: colors.text }} numberOfLines={1}>
+            {txnLabel(txn.type)}{durMin ? ` · ${durMin} мин` : ''}
+          </Muted>
           {deferred && <Badge label="в долг" tone="warning" />}
         </View>
         <Muted style={{ fontSize: 12 }} numberOfLines={1}>
