@@ -15,6 +15,7 @@ function Scanner() {
   const isFocused = useIsFocused();
   const [busy, setBusy] = useState(false);
   const locked = useRef(false);
+  const handledNonce = useRef<string | null>(null);
 
   // Сбрасываем блокировку при возврате на экран.
   useEffect(() => {
@@ -43,10 +44,15 @@ function Scanner() {
 
   async function onScan(raw: string) {
     if (locked.current || busy) return;
+    const seat = extractSeat(raw);
+    // Камера сканирует непрерывно и после успешного входа тут же ловит ТОТ ЖЕ код —
+    // но nonce одноразовый, поэтому повтор давал ложное «QR истёк». Помним последний
+    // обработанный nonce и молча игнорируем его повторные считывания.
+    if (seat && seat.nonce === handledNonce.current) return;
     locked.current = true;
     setBusy(true);
+    if (seat) handledNonce.current = seat.nonce; // помечаем до запроса — второй скан того же кода не пройдёт
     try {
-      const seat = extractSeat(raw);
       if (!seat) {
         throw new Error('Это не QR-код Goplay. Наведите на код на экране ПК.');
       }
@@ -66,6 +72,8 @@ function Scanner() {
         ]);
       }
     } catch (e: any) {
+      // Ошибка — снимаем метку nonce, чтобы можно было повторить (свежий QR даст новый nonce).
+      handledNonce.current = null;
       Alert.alert('Не вышло', e?.message || 'Неверный или просроченный QR', [
         { text: 'Ещё раз', onPress: () => (locked.current = false) },
       ]);
